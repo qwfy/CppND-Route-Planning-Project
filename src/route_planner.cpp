@@ -64,7 +64,7 @@ RouteModel::Node *RoutePlanner::NextNode() {
 }
 
 
-// TODO 6: Complete the ConstructFinalPath method to return the final path found from your A* search.
+// TODO 6 DONE: Complete the ConstructFinalPath method to return the final path found from your A* search.
 // Tips:
 // - This method should take the current (final) node as an argument and iteratively follow the 
 //   chain of parents of nodes until the starting node is found.
@@ -77,7 +77,21 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
     distance = 0.0f;
     std::vector<RouteModel::Node> path_found;
 
-    // TODO: Implement your solution here.
+    // TODO DONE: Implement your solution here.
+    auto cur = current_node;
+    while (true) {
+        path_found.push_back(*cur);
+
+        if (cur->parent != this->start_node) {
+            distance += cur->parent->distance(*cur);
+            cur = cur->parent;
+        } else {
+            path_found.push_back(*this->start_node);
+            break;
+        }
+    }
+
+    std::reverse(path_found.begin(), path_found.end());
 
     distance *= m_Model.MetricScale(); // Multiply the distance by the scale of the map to get meters.
     return path_found;
