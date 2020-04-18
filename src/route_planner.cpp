@@ -35,6 +35,7 @@ float RoutePlanner::CalculateHValue(RouteModel::Node const *node) {
 
 void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
     current_node->FindNeighbors();
+    current_node->visited = true;
 
     for (auto node: current_node->neighbors) {
         node->parent = current_node;
@@ -54,13 +55,15 @@ void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
 // - Create a pointer to the node in the list with the lowest sum.
 // - Remove that node from the open_list.
 // - Return the pointer.
-bool CompareNode(RouteModel::Node const &a, RouteModel::Node const &b) {
-    return (a.g_value + a.h_value) < (b.g_value + b.h_value);
+bool CompareNode(const RouteModel::Node *a, const RouteModel::Node *b) {
+    return ((a->g_value + a->h_value) > (b->g_value + b->h_value));
 }
 
 RouteModel::Node *RoutePlanner::NextNode() {
-    std::sort(this->open_list.front(), this->open_list.back(), CompareNode);
-    return this->open_list.front();
+    std::sort(this->open_list.begin(), this->open_list.end(), CompareNode);
+    auto first = this->open_list.back();
+    open_list.pop_back();
+    return std::move(first);
 }
 
 
@@ -81,9 +84,9 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
     auto cur = current_node;
     while (true) {
         path_found.push_back(*cur);
+        distance += cur->parent->distance(*cur);
 
-        if (cur->parent != this->start_node) {
-            distance += cur->parent->distance(*cur);
+        if (cur->parent != nullptr && cur->parent != this->start_node) {
             cur = cur->parent;
         } else {
             path_found.push_back(*this->start_node);
@@ -99,7 +102,7 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
 }
 
 
-// TODO 7: Write the A* Search algorithm here.
+// TODO 7 DONE: Write the A* Search algorithm here.
 // Tips:
 // - Use the AddNeighbors method to add all of the neighbors of the current node to the open_list.
 // - Use the NextNode() method to sort the open_list and return the next node.
@@ -107,8 +110,17 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
 // - Store the final path in the m_Model.path attribute before the method exits. This path will then be displayed on the map tile.
 
 void RoutePlanner::AStarSearch() {
-    RouteModel::Node *current_node = nullptr;
+    RouteModel::Node *current_node = this->start_node;
 
-    // TODO: Implement your solution here.
+    // TODO DONE: Implement your solution here.
+    do {
+        this->AddNeighbors(current_node);
+        current_node = this->NextNode();
+        if (current_node == this->end_node) {
+            break;
+        }
+    } while (this->open_list.size() > 0);
+
+    this->m_Model.path = this->ConstructFinalPath(current_node);
 
 }
